@@ -12,6 +12,14 @@ export interface UserProfile {
   streakDays: number;
 }
 
+export interface WasteComponentBreakdown {
+  part: string;
+  material: string;
+  binName: string;
+  category: WasteCategory;
+  action: string;
+}
+
 export interface WasteItem {
   id: string;
   name: string;
@@ -29,6 +37,13 @@ export interface WasteItem {
   photoUrl?: string;
   timestamp?: number;
   region?: string;
+  resinCode?: string;
+  recyclingSymbol?: string;
+  componentBreakdown?: WasteComponentBreakdown[];
+  carbonSavedKg?: number;
+  recycledProduct?: string;
+  alternativeDisposal?: string;
+  recyclabilityRating?: "100% Infinitely Recyclable" | "High Commercial Recyclability" | "Commercially Compostable" | "Hazardous / Specialized Recovery" | "Non-Recyclable Landfill Residual";
 }
 
 export interface RegionGuideline {

@@ -13,7 +13,9 @@ import {
   Award,
   Recycle,
   LogIn,
-  UserPlus
+  UserPlus,
+  ArrowLeft,
+  X
 } from "lucide-react";
 import { UserProfile } from "../types";
 import { DEMO_USERS } from "../data/defaultUsers";
@@ -29,11 +31,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLogin,
   onClose,
 }) => {
-  const [mode, setMode] = useState<"login" | "signup" | "demo">("login");
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [district, setDistrict] = useState("Sector 4 - Eco Ward");
+  const [district, setDistrict] = useState("Greenwood Sector 4");
+  const [role, setRole] = useState<UserProfile["role"]>("Eco Citizen");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -47,29 +50,44 @@ export const LoginView: React.FC<LoginViewProps> = ({
       id: `user-${Date.now()}`,
       name: name || email.split("@")[0],
       email: email,
-      role: "Eco Citizen",
-      avatar: "🌱",
+      role: role,
+      avatar: role === "Municipal Inspector" ? "🛡️" : role === "Green Volunteer" ? "🌿" : "🌱",
       district: district,
-      ecoPoints: 60,
+      ecoPoints: existing ? existing.ecoPoints : 120,
       joinedDate: "Today",
       streakDays: 1,
     };
 
-    setSuccessMessage(`Welcome back, ${user.name}!`);
+    setSuccessMessage(`Welcome, ${user.name}!`);
     setTimeout(() => {
       onLogin(user);
-    }, 600);
+    }, 400);
   };
 
   const handleSelectDemo = (demoUser: UserProfile) => {
     setSuccessMessage(`Signed in as ${demoUser.name} (${demoUser.role})`);
     setTimeout(() => {
       onLogin(demoUser);
-    }, 400);
+    }, 350);
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="w-full max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300">
+      {/* Top Breadcrumb & Return Action */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onClose}
+          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[#2196F3] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-full shadow-xs transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Scanner</span>
+        </button>
+
+        <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+          EcoSort Citizen Portal
+        </span>
+      </div>
+
       {/* Bento Grid Header Tile */}
       <div className="bg-white dark:bg-[#0F172A] rounded-[2rem] p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -77,14 +95,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <div className="flex items-center space-x-2">
               <span className="w-2.5 h-2.5 rounded-full bg-[#4CAF50] animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Household & Municipal Portal
+                Municipal & Citizen Profile
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0F172A] dark:text-white tracking-tight">
-              Citizen Authentication<span className="text-[#2196F3]">.</span>
+              Citizen Sign In & Access<span className="text-[#2196F3]">.</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium max-w-xl">
-              Access your personalized waste audit history, customized pickup schedules, municipal reward badges, and compliance records.
+              Track household landfill divergence, collect verified eco points, view customized collection schedules, and download compliance audit certificates.
             </p>
           </div>
 
@@ -113,17 +131,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <div className="lg:col-span-5 bg-white dark:bg-[#0F172A] rounded-[2rem] p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center space-x-1.5">
+              <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-[#2196F3]" />
                 <span>Instant Demo Profiles</span>
               </span>
-              <span className="text-[10px] bg-blue-50 text-[#2196F3] dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full font-bold">
-                1-Click Access
+              <span className="text-[10px] bg-blue-50 text-[#2196F3] dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-0.5 rounded-full font-bold border border-blue-200 dark:border-blue-900">
+                1-Tap Login
               </span>
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Select a pre-configured profile to explore citizen features, municipal inspection badges, and eco points:
+              Click any verified resident profile to test points accumulation, audits, and inspector features instantly:
             </p>
 
             <div className="space-y-2.5">
@@ -133,15 +151,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <button
                     key={demo.id}
                     id={`demo-user-btn-${demo.id}`}
+                    type="button"
                     onClick={() => handleSelectDemo(demo)}
                     className={`w-full p-3.5 rounded-2xl border text-left transition-all flex items-center justify-between group hover:scale-[1.01] ${
                       isSelected
-                        ? "bg-blue-50/80 dark:bg-blue-950/40 border-[#2196F3] text-[#0F172A] dark:text-white shadow-sm"
+                        ? "bg-blue-50/90 dark:bg-blue-950/40 border-[#2196F3] text-[#0F172A] dark:text-white shadow-sm"
                         : "bg-[#F1F5F9]/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 hover:border-[#2196F3]/50"
                     }`}
                   >
                     <div className="flex items-center space-x-3 min-w-0">
-                      <span className="text-2xl w-9 h-9 rounded-xl bg-white dark:bg-slate-700 flex items-center justify-center shadow-xs shrink-0">
+                      <span className="text-2xl w-10 h-10 rounded-xl bg-white dark:bg-slate-700 flex items-center justify-center shadow-xs shrink-0">
                         {demo.avatar}
                       </span>
                       <div className="min-w-0">
@@ -153,7 +172,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             <CheckCircle className="w-3.5 h-3.5 text-[#4CAF50] shrink-0" />
                           )}
                         </div>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block truncate">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block truncate font-medium">
                           {demo.role} • {demo.district}
                         </span>
                       </div>
@@ -173,13 +192,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-300 space-y-1">
+          <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-300 space-y-1.5">
             <span className="font-bold flex items-center space-x-1.5">
               <Award className="w-4 h-4 text-[#4CAF50]" />
-              <span>Eco Reward Benefits</span>
+              <span>Municipal Rewards Program</span>
             </span>
             <p className="text-[11px] leading-relaxed font-medium">
-              Every verified waste classification earns +10 Eco Points redeemable for municipal utility credits and compost bag discounts.
+              Every verified item classification awards +10 Eco Points. Earned points unlock municipal utility rebates and home composting credits.
             </p>
           </div>
         </div>
@@ -190,6 +209,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           <div className="flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-full border border-slate-200/60 dark:border-slate-700/60">
             <button
               id="tab-login-btn"
+              type="button"
               onClick={() => setMode("login")}
               className={`flex-1 py-2 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
                 mode === "login"
@@ -202,6 +222,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </button>
             <button
               id="tab-signup-btn"
+              type="button"
               onClick={() => setMode("signup")}
               className={`flex-1 py-2 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center space-x-1.5 ${
                 mode === "signup"
@@ -223,21 +244,40 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
           <form onSubmit={handleCustomLogin} className="space-y-4">
             {mode === "signup" && (
-              <div className="space-y-1.5">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                  <input
-                    id="signup-name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Ajay Sharma"
-                    className="w-full pl-10 pr-4 py-3 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
-                    required
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input
+                      id="signup-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Ajay Sharma"
+                      className="w-full pl-10 pr-4 py-3 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Account Role
+                  </label>
+                  <select
+                    id="signup-role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as UserProfile["role"])}
+                    className="w-full px-4 py-3 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
+                  >
+                    <option value="Eco Citizen">Eco Citizen (Resident)</option>
+                    <option value="Municipal Inspector">Municipal Inspector</option>
+                    <option value="Green Volunteer">Green Volunteer</option>
+                    <option value="Resident">Resident</option>
+                  </select>
                 </div>
               </div>
             )}
@@ -253,7 +293,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder="citizen@ecocouncil.org"
                   className="w-full pl-10 pr-4 py-3 rounded-full bg-[#F1F5F9] dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#2196F3]"
                   required
                 />
@@ -317,7 +357,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <button
                 type="button"
-                onClick={() => alert("Password reset instructions sent to your email.")}
+                onClick={() => setSuccessMessage("Password reset link dispatched to your registered email.")}
                 className="text-[#2196F3] font-bold hover:underline"
               >
                 Forgot Password?
@@ -329,7 +369,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               type="submit"
               className="w-full py-3.5 px-6 rounded-full bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-white dark:text-[#0F172A] dark:hover:bg-slate-100 text-xs font-black uppercase tracking-wider shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center space-x-2 active:scale-95"
             >
-              <span>{mode === "login" ? "Sign In to EcoSort" : "Register Account"}</span>
+              <span>{mode === "login" ? "Sign In to EcoSort" : "Register Citizen Account"}</span>
               <ArrowRight className="w-4 h-4 text-[#2196F3]" />
             </button>
           </form>
@@ -337,10 +377,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {onClose && (
             <div className="text-center pt-2">
               <button
+                type="button"
                 onClick={onClose}
-                className="text-xs text-slate-400 hover:text-slate-600 font-semibold"
+                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-bold hover:underline"
               >
-                Continue as Anonymous Citizen
+                ← Skip & Continue to Scanner as Guest
               </button>
             </div>
           )}

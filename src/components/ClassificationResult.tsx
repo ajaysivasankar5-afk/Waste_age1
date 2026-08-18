@@ -12,17 +12,25 @@ import {
   CheckSquare, 
   Square,
   Share2,
-  HelpCircle
+  HelpCircle,
+  Layers,
+  ArrowRight,
+  ChevronDown,
+  ExternalLink,
+  ShieldAlert,
+  Sliders,
+  Check
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { WasteItem, WasteCategory } from "../types";
-import { CATEGORY_COLORS } from "../data/wasteCatalog";
+import { CATEGORY_COLORS, WASTE_CATALOG } from "../data/wasteCatalog";
 
 interface ClassificationResultProps {
   item: WasteItem;
   onReset: () => void;
   onSaveToAudit: (item: WasteItem) => void;
   isSaved: boolean;
+  onOverrideItem?: (newItem: WasteItem) => void;
 }
 
 export const ClassificationResult: React.FC<ClassificationResultProps> = ({
@@ -30,17 +38,18 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
   onReset,
   onSaveToAudit,
   isSaved,
+  onOverrideItem,
 }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
   const [showShareToast, setShowShareToast] = useState(false);
+  const [showOverrideMenu, setShowOverrideMenu] = useState(false);
 
   const colors = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Landfill;
 
   const toggleStep = (index: number) => {
     setCompletedSteps((prev) => {
       const next = { ...prev, [index]: !prev[index] };
-      // Check if all steps are completed
       if (item.preparationSteps && Object.keys(next).length === item.preparationSteps.length && Object.values(next).every(Boolean)) {
         confetti({
           particleCount: 40,
@@ -55,7 +64,7 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
 
   const handleSpeak = () => {
     if (!("speechSynthesis" in window)) {
-      alert("Text-to-speech is not supported in this browser.");
+      alert("Text-to-speech is not supported in this browser window.");
       return;
     }
 
@@ -66,7 +75,7 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
     }
 
     window.speechSynthesis.cancel();
-    const textToSpeak = `${item.name}. Category: ${item.category}. Bin: ${item.binName}. Instructions: ${item.instructions}. Warning: ${item.contaminationWarning}`;
+    const textToSpeak = `${item.name}. Category: ${item.category}. Disposal Bin: ${item.binName}. Instructions: ${item.instructions}. Warning: ${item.contaminationWarning || 'None'}`;
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
@@ -90,7 +99,7 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
   };
 
   const handleShare = () => {
-    const text = `I just classified "${item.name}" as ${item.category} (${item.binName}) using the Waste Segregation Assistant!`;
+    const text = `EcoSort Segregation Guide: "${item.name}" belongs in ${item.binName} (${item.category}). Prep: ${item.preparationSteps?.[0] || item.instructions}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
       setShowShareToast(true);
@@ -131,39 +140,61 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
               <span className={`px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest shadow-sm ${getCategoryBadgeClass(item.category)}`}>
                 {item.category}
               </span>
-              {item.confidence && (
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  {Math.round(item.confidence * 100)}% Confidence
+
+              {item.resinCode && (
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs border border-slate-700">
+                  {item.resinCode}
                 </span>
               )}
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#F1F5F9] dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                Material: {item.material}
-              </span>
+
+              {item.recyclabilityRating && (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#2196F3] dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  {item.recyclabilityRating}
+                </span>
+              )}
+
+              {item.confidence && (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {Math.round(item.confidence * 100)}% Verified Match
+                </span>
+              )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-black text-[#0F172A] dark:text-white tracking-tight pt-1">
-              {item.name}<span className="text-[#2196F3]">.</span>
-            </h1>
+            <div className="flex items-center space-x-3 pt-1">
+              <h1 className="text-3xl sm:text-4xl font-black text-[#0F172A] dark:text-white tracking-tight">
+                {item.name}<span className="text-[#2196F3]">.</span>
+              </h1>
+              {item.recyclingSymbol && (
+                <span className="text-3xl" title={`Recycling Symbol: ${item.recyclingSymbol}`}>
+                  {item.recyclingSymbol}
+                </span>
+              )}
+            </div>
 
-            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl">
+            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-3xl font-medium">
               {item.instructions}
             </p>
+
+            <div className="text-xs text-slate-500 font-semibold flex items-center space-x-2 pt-1">
+              <span>Material Composition:</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">{item.material}</span>
+            </div>
           </div>
 
           {/* Quick Action Buttons */}
-          <div className="flex items-center space-x-2.5 self-start shrink-0">
+          <div className="flex flex-wrap items-center gap-2 self-start shrink-0">
             <button
               id="voice-readout-btn"
               onClick={handleSpeak}
               className={`px-4 py-2.5 rounded-full border transition-all flex items-center space-x-2 text-xs font-bold ${
                 isSpeaking
-                  ? "bg-amber-500 text-white border-amber-600 shadow-md"
+                  ? "bg-amber-500 text-white border-amber-600 shadow-md animate-pulse"
                   : "bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700"
               }`}
               title="Listen to disposal instructions"
             >
               {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              <span>{isSpeaking ? "Mute" : "Voice Readout"}</span>
+              <span>{isSpeaking ? "Stop Voice" : "Voice Readout"}</span>
             </button>
 
             <button
@@ -174,6 +205,42 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
             >
               <Share2 className="w-4 h-4" />
             </button>
+
+            {/* Quick Refine Item Dropdown Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowOverrideMenu(!showOverrideMenu)}
+                className="px-3.5 py-2.5 rounded-full bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-bold flex items-center space-x-1.5"
+                title="Refine or switch item"
+              >
+                <Sliders className="w-3.5 h-3.5 text-[#2196F3]" />
+                <span>Refine Item</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+
+              {showOverrideMenu && (
+                <div className="absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-in fade-in space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-400 px-3 py-1.5 block">
+                    Switch to Verified Material:
+                  </span>
+                  {WASTE_CATALOG.map((catItem) => (
+                    <button
+                      key={catItem.id}
+                      onClick={() => {
+                        setShowOverrideMenu(false);
+                        if (onOverrideItem) {
+                          onOverrideItem(catItem);
+                        }
+                      }}
+                      className="w-full p-2 rounded-xl text-left text-xs font-bold hover:bg-[#F1F5F9] dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-between"
+                    >
+                      <span className="truncate">{catItem.name}</span>
+                      <span className="text-[10px] text-slate-400 shrink-0 ml-2">{catItem.category}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -241,6 +308,58 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
         </div>
       </div>
 
+      {/* Multi-Component Packaging Disassembly Guide (if item has sub-parts like bottle/cap or coffee cup/lid) */}
+      {item.componentBreakdown && item.componentBreakdown.length > 0 && (
+        <div className="bg-white dark:bg-[#0F172A] rounded-[2rem] p-6 sm:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-black text-[#0F172A] dark:text-white flex items-center space-x-2 text-base">
+              <Layers className="w-5 h-5 text-[#2196F3]" />
+              <span>Multi-Component Packaging Disassembly Guide</span>
+            </h3>
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              Material Separation
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            This item contains distinct packaging components. Separate them as instructed below:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
+            {item.componentBreakdown.map((part, idx) => (
+              <div 
+                key={idx}
+                className="p-4 rounded-2xl bg-[#F1F5F9]/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-[#0F172A] dark:text-white">
+                    {part.part}
+                  </span>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    part.category === "Recyclable" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300" :
+                    part.category === "Organic" ? "bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-300" :
+                    part.category === "Hazardous" ? "bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-300" :
+                    "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300"
+                  }`}>
+                    {part.category}
+                  </span>
+                </div>
+
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Material: </span>
+                  {part.material}
+                </div>
+
+                <div className="p-2 rounded-xl bg-white dark:bg-slate-700/80 text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-600 flex items-center space-x-1.5">
+                  <ArrowRight className="w-3.5 h-3.5 text-[#2196F3] shrink-0" />
+                  <span>{part.action}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Bento Grid: Preparation Checklist & Environmental Impact */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Step-by-step Preparation Checklist Bento Card */}
@@ -256,7 +375,7 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Complete each step before disposal to safeguard the recycling stream:
+            Complete each step before disposal to safeguard municipal stream quality:
           </p>
 
           <div className="space-y-2.5 pt-1">
@@ -302,6 +421,17 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
               <p className="leading-relaxed font-medium">{item.tips}</p>
             </div>
           )}
+
+          {/* Alternative Disposal & Deposit Return Scheme */}
+          {item.alternativeDisposal && (
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl text-xs text-emerald-900 dark:text-emerald-300 space-y-1">
+              <span className="font-black uppercase tracking-wider flex items-center space-x-1.5 text-[#16A34A]">
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Alternative Value Pathway</span>
+              </span>
+              <p className="leading-relaxed font-medium">{item.alternativeDisposal}</p>
+            </div>
+          )}
         </div>
 
         {/* Contamination Warning & Impact Metrics Bento Tile */}
@@ -309,7 +439,7 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
           {/* Contamination Hazard Alert */}
           {item.contaminationWarning && (
             <div className="bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-800/60 rounded-[2rem] p-6 shadow-sm space-y-2">
-              <div className="flex items-center space-x-2 text-[#F44336] font-black text-sm uppercase tracking-wider">
+              <div className="flex items-center space-x-2 text-[#DC2626] font-black text-sm uppercase tracking-wider">
                 <AlertOctagon className="w-5 h-5 shrink-0" />
                 <span>Contamination Warning</span>
               </div>
@@ -340,13 +470,25 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
               <div className="p-4 rounded-2xl bg-green-50/80 dark:bg-green-950/30 border border-green-200 dark:border-green-800/60 space-y-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#4CAF50] flex items-center space-x-1">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Segregation Benefit</span>
+                  <span>Carbon Offset</span>
                 </span>
-                <p className="text-xs font-semibold text-green-900 dark:text-green-300 leading-snug">
-                  {item.environmentalImpact || "Diverts valuable resources from municipal landfills."}
+                <p className="text-sm font-black text-green-900 dark:text-green-300">
+                  {item.carbonSavedKg ? `${item.carbonSavedKg} kg CO₂e saved` : "Diverts landfill volume"}
                 </p>
               </div>
             </div>
+
+            {/* Recycled End Product Destination */}
+            {item.recycledProduct && (
+              <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#2196F3] block">
+                  Circular Reprocessed Products:
+                </span>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {item.recycledProduct}
+                </p>
+              </div>
+            )}
 
             {/* Why This Category Card */}
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 space-y-1">
