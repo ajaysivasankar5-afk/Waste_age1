@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Navbar } from "./components/Navbar";
+import { PhotoUploadView } from "./components/PhotoUploadView";
 import { ClassificationResult } from "./components/ClassificationResult";
 import { CatalogView } from "./components/CatalogView";
 import { RegionalRulesView } from "./components/RegionalRulesView";
@@ -24,7 +25,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [activeTab, setActiveTab] = useState<string>("catalog");
+  const [activeTab, setActiveTab] = useState<string>("upload");
 
   const [selectedRegionId, setSelectedRegionId] = useState<string>(() => {
     return localStorage.getItem("waste_region_id") || "standard-intl";
@@ -68,7 +69,6 @@ export default function App() {
 
   const handleClassify = (item: WasteItem) => {
     setActiveResult(item);
-    setActiveTab("catalog");
   };
 
   const handleOverrideResult = (newItem: WasteItem) => {
@@ -105,7 +105,7 @@ export default function App() {
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
     setEcoPoints(user.ecoPoints || 150);
-    setActiveTab("catalog");
+    setActiveTab("upload");
   };
 
   const handleLogout = () => {
@@ -166,6 +166,25 @@ export default function App() {
 
       {/* Main App Bento Canvas */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === "upload" && (
+          <>
+            {activeResult ? (
+              <ClassificationResult
+                item={activeResult}
+                onReset={() => setActiveResult(null)}
+                onSaveToAudit={handleSaveToAudit}
+                isSaved={isCurrentResultSaved}
+                onOverrideItem={handleOverrideResult}
+              />
+            ) : (
+              <PhotoUploadView
+                onClassify={handleClassify}
+                selectedRegionName={currentRegion.name}
+              />
+            )}
+          </>
+        )}
+
         {activeTab === "catalog" && (
           <>
             {activeResult ? (

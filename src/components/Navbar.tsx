@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { 
   Recycle, 
+  Upload,
   BookOpen, 
   Calendar, 
   MapPin, 
@@ -55,6 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const navItems = [
+    { id: "upload", label: "Upload Photo", icon: Upload, badge: "Identify" },
     { id: "catalog", label: "Waste Catalog", icon: Recycle, badge: "60+ Items" },
     { id: "checklists", label: "Segregation Checklists", icon: ListChecks, badge: "Daily" },
     { id: "rules", label: "Regional Rules", icon: MapPin },
@@ -71,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Logo & Brand */}
           <div 
             className="flex items-center space-x-3 cursor-pointer" 
-            onClick={() => setActiveTab("catalog")}
+            onClick={() => setActiveTab("upload")}
           >
             <div className="w-11 h-11 rounded-2xl bg-[#0F172A] dark:bg-white dark:text-[#0F172A] text-white flex items-center justify-center shadow-md shadow-slate-900/10">
               <Recycle className="w-6 h-6 text-[#2196F3]" />
@@ -214,13 +216,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-            {/* Quick Catalog Action Button */}
+            {/* Quick Upload Photo Action Button */}
             <button
-              onClick={() => setActiveTab("catalog")}
+              onClick={() => setActiveTab("upload")}
               className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-white dark:text-[#0F172A] dark:hover:bg-slate-100 px-4 sm:px-5 py-2 rounded-full shadow-md text-xs font-black tracking-wider uppercase transition-all hidden sm:inline-flex items-center space-x-1.5 active:scale-95"
             >
-              <Recycle className="w-3.5 h-3.5 text-[#2196F3]" />
-              <span>Catalog</span>
+              <Upload className="w-3.5 h-3.5 text-[#2196F3]" />
+              <span>Upload Photo</span>
             </button>
           </div>
         </div>

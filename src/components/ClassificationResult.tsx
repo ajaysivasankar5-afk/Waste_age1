@@ -302,7 +302,7 @@ export const ClassificationResult: React.FC<ClassificationResultProps> = ({
               className="px-5 py-3 rounded-full text-xs font-bold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors flex items-center space-x-2 shadow-sm"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>Scan Next</span>
+              <span>Identify Next</span>
             </button>
           </div>
         </div>
