@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   Recycle, 
   Camera, 
@@ -8,9 +8,15 @@ import {
   AlertTriangle, 
   BarChart3, 
   Award,
-  Sparkles
+  Sparkles,
+  ListChecks,
+  User,
+  LogIn,
+  LogOut,
+  ChevronDown
 } from "lucide-react";
 import { REGIONAL_GUIDELINES } from "../data/regionalRules";
+import { UserProfile } from "../types";
 
 interface NavbarProps {
   activeTab: string;
@@ -19,6 +25,9 @@ interface NavbarProps {
   setSelectedRegionId: (id: string) => void;
   auditCount: number;
   ecoPoints: number;
+  currentUser: UserProfile | null;
+  onOpenLogin: () => void;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,14 +37,20 @@ export const Navbar: React.FC<NavbarProps> = ({
   setSelectedRegionId,
   auditCount,
   ecoPoints,
+  currentUser,
+  onOpenLogin,
+  onLogout,
 }) => {
-  const currentRegion = REGIONAL_GUIDELINES.find((r) => r.id === selectedRegionId) || REGIONAL_GUIDELINES[0];
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const currentRegion =
+    REGIONAL_GUIDELINES.find((r) => r.id === selectedRegionId) || REGIONAL_GUIDELINES[0];
 
   const navItems = [
-    { id: "scanner", label: "AI Scanner", icon: Camera, badge: "Core" },
+    { id: "scanner", label: "AI Scanner", icon: Camera, badge: "Live" },
+    { id: "checklists", label: "Checklists", icon: ListChecks, badge: "Prep" },
     { id: "catalog", label: "Waste Catalog", icon: Recycle, badge: "60+ Items" },
-    { id: "rules", label: "Regional Rules", icon: MapPin },
     { id: "schedule", label: "Schedule & Alerts", icon: Calendar },
+    { id: "rules", label: "Regional Rules", icon: MapPin },
     { id: "tips", label: "Recycling Guide", icon: BookOpen },
     { id: "report", label: "Report Dumping", icon: AlertTriangle },
     { id: "audit", label: "Waste Audit", icon: BarChart3, badge: auditCount > 0 ? `${auditCount}` : undefined },
@@ -46,7 +61,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab("scanner")}>
+          <div 
+            className="flex items-center space-x-3 cursor-pointer" 
+            onClick={() => setActiveTab("scanner")}
+          >
             <div className="w-11 h-11 rounded-2xl bg-[#0F172A] dark:bg-white dark:text-[#0F172A] text-white flex items-center justify-center shadow-md shadow-slate-900/10">
               <Recycle className="w-6 h-6 text-[#2196F3]" />
             </div>
@@ -74,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Region Selector */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <select
                 id="region-selector"
                 value={selectedRegionId}
@@ -107,13 +125,100 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
 
+            {/* User Profile / Auth Button */}
+            <div className="relative">
+              {currentUser ? (
+                <div className="relative">
+                  <button
+                    id="user-profile-menu-btn"
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    className="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 pl-2 pr-3 py-1.5 rounded-full hover:border-[#2196F3] shadow-sm transition-all text-xs font-bold"
+                  >
+                    <span className="w-7 h-7 rounded-full bg-[#0F172A] text-white flex items-center justify-center text-sm shadow-xs">
+                      {currentUser.avatar}
+                    </span>
+                    <span className="hidden md:inline font-black text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
+                      {currentUser.name.split(" ")[0]}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {showUserDropdown && (
+                    <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3 z-50 animate-in fade-in">
+                      <div className="flex items-center space-x-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] dark:bg-slate-800 flex items-center justify-center text-xl shadow-xs">
+                          {currentUser.avatar}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-[#0F172A] dark:text-white truncate">
+                            {currentUser.name}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-semibold truncate">
+                            {currentUser.email}
+                          </p>
+                          <span className="text-[9px] font-black uppercase text-[#2196F3] tracking-wider">
+                            {currentUser.role}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 text-xs font-bold">
+                        <div className="flex justify-between text-slate-500 dark:text-slate-400 py-1">
+                          <span>District:</span>
+                          <span className="text-slate-800 dark:text-slate-200">{currentUser.district}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-500 dark:text-slate-400 py-1">
+                          <span>Eco Points:</span>
+                          <span className="text-[#4CAF50] font-black">{currentUser.ecoPoints} pts</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            setActiveTab("login");
+                          }}
+                          className="w-full py-2 px-3 rounded-xl bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-200 text-left transition-colors flex items-center space-x-2"
+                        >
+                          <User className="w-3.5 h-3.5 text-[#2196F3]" />
+                          <span>Switch Profile</span>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false);
+                            onLogout();
+                          }}
+                          className="w-full py-2 px-3 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 text-xs font-bold text-red-600 dark:text-red-400 text-left transition-colors flex items-center space-x-2"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  id="nav-login-btn"
+                  onClick={onOpenLogin}
+                  className="flex items-center space-x-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-full text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm transition-all"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-[#2196F3]" />
+                  <span>Sign In</span>
+                </button>
+              )}
+            </div>
+
             {/* Quick New Scan Action Button */}
             <button
               onClick={() => setActiveTab("scanner")}
               className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-white dark:text-[#0F172A] dark:hover:bg-slate-100 px-4 sm:px-5 py-2 rounded-full shadow-md text-xs font-black tracking-wider uppercase transition-all hidden sm:inline-flex items-center space-x-1.5 active:scale-95"
             >
               <Camera className="w-3.5 h-3.5 text-[#2196F3]" />
-              <span>New Scan +</span>
+              <span>Scan +</span>
             </button>
           </div>
         </div>

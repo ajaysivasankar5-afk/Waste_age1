@@ -1,0 +1,48 @@
+import { UserProfile } from "../types";
+
+export const DEMO_USERS: UserProfile[] = [
+  {
+    id: "user-ajay",
+    name: "Ajay Sharma",
+    email: "ajayscse25_29@ksrce.ac.in",
+    role: "Eco Citizen",
+    avatar: "🌱",
+    district: "Greenwood Sector 4",
+    ecoPoints: 240,
+    joinedDate: "August 2026",
+    streakDays: 14,
+  },
+  {
+    id: "user-elena",
+    name: "Inspector Elena Vance",
+    email: "elena.vance@municipality.gov",
+    role: "Municipal Inspector",
+    avatar: "🛡️",
+    district: "Metropolitan Central District",
+    ecoPoints: 580,
+    joinedDate: "January 2026",
+    streakDays: 45,
+  },
+  {
+    id: "user-marcus",
+    name: "Marcus Chen",
+    email: "marcus.chen@zerowaste.org",
+    role: "Green Volunteer",
+    avatar: "🌍",
+    district: "Bayside Eco Community",
+    ecoPoints: 310,
+    joinedDate: "June 2026",
+    streakDays: 22,
+  },
+  {
+    id: "user-resident",
+    name: "Local Resident (Guest)",
+    email: "guest@ecosort.local",
+    role: "Resident",
+    avatar: "🏡",
+    district: "Downtown Ward 7",
+    ecoPoints: 40,
+    joinedDate: "Today",
+    streakDays: 1,
+  },
+];

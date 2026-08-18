@@ -13,13 +13,21 @@ import { ScheduleView } from "./components/ScheduleView";
 import { ReportDumpView } from "./components/ReportDumpView";
 import { HistoryAuditView } from "./components/HistoryAuditView";
 import { TipsView } from "./components/TipsView";
-import { WasteItem, WasteAuditEntry } from "./types";
+import { ChecklistsView } from "./components/ChecklistsView";
+import { LoginView } from "./components/LoginView";
+import { WasteItem, WasteAuditEntry, UserProfile } from "./types";
 import { REGIONAL_GUIDELINES } from "./data/regionalRules";
+import { DEMO_USERS } from "./data/defaultUsers";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("scanner");
   const [selectedRegionId, setSelectedRegionId] = useState<string>(() => {
     return localStorage.getItem("waste_region_id") || "standard-intl";
+  });
+
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem("waste_auth_user");
+    return saved ? JSON.parse(saved) : DEMO_USERS[0];
   });
 
   const [activeResult, setActiveResult] = useState<WasteItem | null>(null);
@@ -31,7 +39,7 @@ export default function App() {
 
   const [ecoPoints, setEcoPoints] = useState<number>(() => {
     const saved = localStorage.getItem("waste_eco_points");
-    return saved ? parseInt(saved, 10) : 40;
+    return saved ? parseInt(saved, 10) : currentUser ? currentUser.ecoPoints : 120;
   });
 
   // Save changes to localStorage
@@ -46,6 +54,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("waste_eco_points", ecoPoints.toString());
   }, [ecoPoints]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem("waste_auth_user", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("waste_auth_user");
+    }
+  }, [currentUser]);
 
   const currentRegion =
     REGIONAL_GUIDELINES.find((r) => r.id === selectedRegionId) || REGIONAL_GUIDELINES[0];
@@ -65,10 +81,31 @@ export default function App() {
       timestamp: Date.now(),
       photoUrl: item.photoUrl,
       divertedFromLandfill: isDiverted,
+      userId: currentUser?.id,
     };
 
     setAuditEntries((prev) => [newEntry, ...prev]);
     setEcoPoints((prev) => prev + 10);
+    if (currentUser) {
+      setCurrentUser((prev) => (prev ? { ...prev, ecoPoints: prev.ecoPoints + 10 } : null));
+    }
+  };
+
+  const handleEarnPoints = (pts: number) => {
+    setEcoPoints((prev) => prev + pts);
+    if (currentUser) {
+      setCurrentUser((prev) => (prev ? { ...prev, ecoPoints: prev.ecoPoints + pts } : null));
+    }
+  };
+
+  const handleLogin = (user: UserProfile) => {
+    setCurrentUser(user);
+    setEcoPoints(user.ecoPoints);
+    setActiveTab("scanner");
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
   };
 
   const handleRemoveAuditEntry = (id: string) => {
@@ -83,7 +120,11 @@ export default function App() {
 
   const isCurrentResultSaved = !!(
     activeResult &&
-    auditEntries.some((e) => e.itemName === activeResult.name && Math.abs(e.timestamp - (activeResult.timestamp || 0)) < 60000)
+    auditEntries.some(
+      (e) =>
+        e.itemName === activeResult.name &&
+        Math.abs(e.timestamp - (activeResult.timestamp || 0)) < 60000
+    )
   );
 
   return (
@@ -96,6 +137,9 @@ export default function App() {
         setSelectedRegionId={setSelectedRegionId}
         auditCount={auditEntries.length}
         ecoPoints={ecoPoints}
+        currentUser={currentUser}
+        onOpenLogin={() => setActiveTab("login")}
+        onLogout={handleLogout}
       />
 
       {/* Main App Bento Canvas */}
@@ -118,6 +162,10 @@ export default function App() {
           </>
         )}
 
+        {activeTab === "checklists" && (
+          <ChecklistsView onEarnPoints={handleEarnPoints} />
+        )}
+
         {activeTab === "catalog" && (
           <CatalogView onSelectItem={handleClassify} />
         )}
@@ -134,6 +182,14 @@ export default function App() {
         {activeTab === "tips" && <TipsView />}
 
         {activeTab === "report" && <ReportDumpView />}
+
+        {activeTab === "login" && (
+          <LoginView
+            currentUser={currentUser}
+            onLogin={handleLogin}
+            onClose={() => setActiveTab("scanner")}
+          />
+        )}
 
         {activeTab === "audit" && (
           <HistoryAuditView
@@ -161,17 +217,24 @@ export default function App() {
 
           <div className="flex items-center space-x-3 text-xs font-semibold">
             <button
+              onClick={() => setActiveTab("checklists")}
+              className="hover:text-[#2196F3] transition-colors"
+            >
+              Segregation Checklists
+            </button>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <button
+              onClick={() => setActiveTab("schedule")}
+              className="hover:text-[#2196F3] transition-colors"
+            >
+              Pickup Reminders
+            </button>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <button
               onClick={() => setActiveTab("rules")}
               className="hover:text-[#2196F3] transition-colors"
             >
               Municipal Standard: {currentRegion.name.split("(")[0].trim()}
-            </button>
-            <span className="text-slate-300 dark:text-slate-700">•</span>
-            <button
-              onClick={() => setActiveTab("tips")}
-              className="hover:text-[#2196F3] transition-colors"
-            >
-              Zero-Waste Masterclasses
             </button>
           </div>
         </div>

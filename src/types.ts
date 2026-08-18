@@ -1,5 +1,17 @@
 export type WasteCategory = "Recyclable" | "Organic" | "Hazardous" | "Landfill";
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: "Eco Citizen" | "Municipal Inspector" | "Green Volunteer" | "Resident";
+  avatar: string;
+  district: string;
+  ecoPoints: number;
+  joinedDate: string;
+  streakDays: number;
+}
+
 export interface WasteItem {
   id: string;
   name: string;
@@ -45,6 +57,7 @@ export interface WasteAuditEntry {
   timestamp: number;
   photoUrl?: string;
   divertedFromLandfill: boolean;
+  userId?: string;
 }
 
 export interface DumpingReport {
@@ -68,6 +81,8 @@ export interface ScheduleEvent {
   category: WasteCategory;
   color: string;
   active: boolean;
+  notes?: string;
+  frequency?: "Weekly" | "Bi-Weekly" | "Monthly";
 }
 
 export interface EducationalArticle {
@@ -80,3 +95,22 @@ export interface EducationalArticle {
   keyTakeaway: string;
   badge: string;
 }
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  description: string;
+  category: WasteCategory | "Household" | "General";
+  critical: boolean;
+  tip?: string;
+}
+
+export interface WasteChecklistCategory {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  category: WasteCategory | "Household";
+  items: ChecklistItem[];
+}
+
