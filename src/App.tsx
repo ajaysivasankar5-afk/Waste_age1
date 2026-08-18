@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Navbar } from "./components/Navbar";
-import { ScannerView } from "./components/ScannerView";
 import { ClassificationResult } from "./components/ClassificationResult";
 import { CatalogView } from "./components/CatalogView";
 import { RegionalRulesView } from "./components/RegionalRulesView";
@@ -25,7 +24,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [activeTab, setActiveTab] = useState<string>("scanner");
+  const [activeTab, setActiveTab] = useState<string>("catalog");
 
   const [selectedRegionId, setSelectedRegionId] = useState<string>(() => {
     return localStorage.getItem("waste_region_id") || "standard-intl";
@@ -69,7 +68,7 @@ export default function App() {
 
   const handleClassify = (item: WasteItem) => {
     setActiveResult(item);
-    setActiveTab("scanner");
+    setActiveTab("catalog");
   };
 
   const handleOverrideResult = (newItem: WasteItem) => {
@@ -106,7 +105,7 @@ export default function App() {
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
     setEcoPoints(user.ecoPoints || 150);
-    setActiveTab("scanner");
+    setActiveTab("catalog");
   };
 
   const handleLogout = () => {
@@ -126,9 +125,7 @@ export default function App() {
   };
 
   const handleSelectTab = (tab: string) => {
-    if (tab === "scanner") {
-      setActiveResult(null);
-    }
+    setActiveResult(null);
     setActiveTab(tab);
   };
 
@@ -169,7 +166,7 @@ export default function App() {
 
       {/* Main App Bento Canvas */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "scanner" && (
+        {activeTab === "catalog" && (
           <>
             {activeResult ? (
               <ClassificationResult
@@ -180,20 +177,13 @@ export default function App() {
                 onOverrideItem={handleOverrideResult}
               />
             ) : (
-              <ScannerView
-                onClassify={handleClassify}
-                selectedRegionName={currentRegion.name}
-              />
+              <CatalogView onSelectItem={handleClassify} />
             )}
           </>
         )}
 
         {activeTab === "checklists" && (
           <ChecklistsView onEarnPoints={handleEarnPoints} />
-        )}
-
-        {activeTab === "catalog" && (
-          <CatalogView onSelectItem={handleClassify} />
         )}
 
         {activeTab === "rules" && (
