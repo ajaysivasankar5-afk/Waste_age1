@@ -11,9 +11,10 @@ import {
   Sparkles,
   ListChecks,
   User,
-  LogIn,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 import { REGIONAL_GUIDELINES } from "../data/regionalRules";
 import { UserProfile } from "../types";
@@ -26,7 +27,7 @@ interface NavbarProps {
   auditCount: number;
   ecoPoints: number;
   currentUser: UserProfile | null;
-  onOpenLogin: () => void;
+  onOpenLogin?: () => void;
   onLogout: () => void;
 }
 
@@ -38,12 +39,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   auditCount,
   ecoPoints,
   currentUser,
-  onOpenLogin,
   onLogout,
 }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const currentRegion =
     REGIONAL_GUIDELINES.find((r) => r.id === selectedRegionId) || REGIONAL_GUIDELINES[0];
+
+  // Mask email for user privacy (e.g., a****@domain.com)
+  const getMaskedEmail = (email: string) => {
+    if (!email) return "Private User";
+    const parts = email.split("@");
+    if (parts.length !== 2) return email;
+    const namePart = parts[0];
+    const maskedName = namePart.length > 2 ? `${namePart[0]}***${namePart[namePart.length - 1]}` : `${namePart[0]}*`;
+    return `${maskedName}@${parts[1]}`;
+  };
 
   const navItems = [
     { id: "scanner", label: "AI Scanner", icon: Camera, badge: "Live" },
@@ -125,92 +135,86 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
 
-            {/* User Profile / Auth Button */}
-            <div className="relative">
-              {currentUser ? (
-                <div className="relative">
-                  <button
-                    id="user-profile-menu-btn"
-                    onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 pl-2 pr-3 py-1.5 rounded-full hover:border-[#2196F3] shadow-sm transition-all text-xs font-bold"
-                  >
-                    <span className="w-7 h-7 rounded-full bg-[#0F172A] text-white flex items-center justify-center text-sm shadow-xs">
-                      {currentUser.avatar}
-                    </span>
-                    <span className="hidden md:inline font-black text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
-                      {currentUser.name.split(" ")[0]}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
+            {/* Private User Profile Button */}
+            {currentUser && (
+              <div className="relative">
+                <button
+                  id="user-profile-menu-btn"
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 pl-2 pr-3 py-1.5 rounded-full hover:border-[#2196F3] shadow-sm transition-all text-xs font-bold"
+                >
+                  <span className="w-7 h-7 rounded-full bg-[#0F172A] text-white flex items-center justify-center text-sm shadow-xs">
+                    {currentUser.avatar || "🌱"}
+                  </span>
+                  <span className="hidden md:inline font-black text-slate-800 dark:text-slate-200 max-w-[100px] truncate">
+                    {currentUser.name.split(" ")[0]}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                </button>
 
-                  {/* Dropdown Menu */}
-                  {showUserDropdown && (
-                    <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3 z-50 animate-in fade-in">
-                      <div className="flex items-center space-x-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] dark:bg-slate-800 flex items-center justify-center text-xl shadow-xs">
-                          {currentUser.avatar}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-[#0F172A] dark:text-white truncate">
-                            {currentUser.name}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-semibold truncate">
-                            {currentUser.email}
-                          </p>
+                {/* Dropdown Menu */}
+                {showUserDropdown && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 shadow-2xl p-4 space-y-3 z-50 animate-in fade-in">
+                    <div className="flex items-center space-x-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                      <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] dark:bg-slate-800 flex items-center justify-center text-xl shadow-xs">
+                        {currentUser.avatar || "🌱"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#0F172A] dark:text-white truncate">
+                          {currentUser.name}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-semibold truncate">
+                          {getMaskedEmail(currentUser.email)}
+                        </p>
+                        <div className="flex items-center space-x-1 mt-0.5">
                           <span className="text-[9px] font-black uppercase text-[#2196F3] tracking-wider">
                             {currentUser.role}
                           </span>
+                          <span className="text-[8px] bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 px-1.5 py-0.2 rounded font-bold">
+                            Private
+                          </span>
                         </div>
-                      </div>
-
-                      <div className="space-y-1 text-xs font-bold">
-                        <div className="flex justify-between text-slate-500 dark:text-slate-400 py-1">
-                          <span>District:</span>
-                          <span className="text-slate-800 dark:text-slate-200">{currentUser.district}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-500 dark:text-slate-400 py-1">
-                          <span>Eco Points:</span>
-                          <span className="text-[#4CAF50] font-black">{currentUser.ecoPoints} pts</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-                        <button
-                          onClick={() => {
-                            setShowUserDropdown(false);
-                            setActiveTab("login");
-                          }}
-                          className="w-full py-2 px-3 rounded-xl bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-200 text-left transition-colors flex items-center space-x-2"
-                        >
-                          <User className="w-3.5 h-3.5 text-[#2196F3]" />
-                          <span>Switch Profile</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setShowUserDropdown(false);
-                            onLogout();
-                          }}
-                          className="w-full py-2 px-3 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 text-xs font-bold text-red-600 dark:text-red-400 text-left transition-colors flex items-center space-x-2"
-                        >
-                          <LogOut className="w-3.5 h-3.5" />
-                          <span>Sign Out</span>
-                        </button>
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  id="nav-login-btn"
-                  onClick={onOpenLogin}
-                  className="flex items-center space-x-1.5 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-200 dark:border-slate-800 px-3.5 py-2 rounded-full text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm transition-all"
-                >
-                  <LogIn className="w-3.5 h-3.5 text-[#2196F3]" />
-                  <span>Sign In</span>
-                </button>
-              )}
-            </div>
+
+                    <div className="space-y-1.5 text-xs font-bold">
+                      <div className="flex justify-between text-slate-500 dark:text-slate-400 py-0.5">
+                        <span>Citizen ID:</span>
+                        <span className="text-slate-800 dark:text-slate-200 font-mono text-[11px]">
+                          {currentUser.citizenId || "ECO-PRIV-SECURE"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-slate-500 dark:text-slate-400 py-0.5">
+                        <span>District:</span>
+                        <span className="text-slate-800 dark:text-slate-200">{currentUser.district}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500 dark:text-slate-400 py-0.5">
+                        <span>Eco Points:</span>
+                        <span className="text-[#4CAF50] font-black">{ecoPoints} pts</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                      <div className="p-2 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 flex items-center space-x-2 text-[10px] text-blue-800 dark:text-blue-200">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#2196F3] shrink-0" />
+                        <span>All reports & audits are private</span>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          onLogout();
+                        }}
+                        className="w-full py-2 px-3 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 text-xs font-bold text-red-600 dark:text-red-400 text-left transition-colors flex items-center space-x-2"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Lock & Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Quick New Scan Action Button */}
             <button

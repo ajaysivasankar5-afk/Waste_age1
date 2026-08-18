@@ -17,17 +17,18 @@ import { ChecklistsView } from "./components/ChecklistsView";
 import { LoginView } from "./components/LoginView";
 import { WasteItem, WasteAuditEntry, UserProfile } from "./types";
 import { REGIONAL_GUIDELINES } from "./data/regionalRules";
-import { DEMO_USERS } from "./data/defaultUsers";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>("scanner");
-  const [selectedRegionId, setSelectedRegionId] = useState<string>(() => {
-    return localStorage.getItem("waste_region_id") || "standard-intl";
-  });
-
+  // Check if there is an active authenticated private session
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem("waste_auth_user");
-    return saved ? JSON.parse(saved) : DEMO_USERS[0];
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [activeTab, setActiveTab] = useState<string>("scanner");
+
+  const [selectedRegionId, setSelectedRegionId] = useState<string>(() => {
+    return localStorage.getItem("waste_region_id") || "standard-intl";
   });
 
   const [activeResult, setActiveResult] = useState<WasteItem | null>(null);
@@ -39,7 +40,7 @@ export default function App() {
 
   const [ecoPoints, setEcoPoints] = useState<number>(() => {
     const saved = localStorage.getItem("waste_eco_points");
-    return saved ? parseInt(saved, 10) : currentUser ? currentUser.ecoPoints : 120;
+    return saved ? parseInt(saved, 10) : currentUser ? currentUser.ecoPoints : 150;
   });
 
   // Save changes to localStorage
@@ -71,6 +72,10 @@ export default function App() {
     setActiveTab("scanner");
   };
 
+  const handleOverrideResult = (newItem: WasteItem) => {
+    setActiveResult(newItem);
+  };
+
   const handleSaveToAudit = (item: WasteItem) => {
     const isDiverted = item.category !== "Landfill";
     const newEntry: WasteAuditEntry = {
@@ -100,12 +105,14 @@ export default function App() {
 
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
-    setEcoPoints(user.ecoPoints);
+    setEcoPoints(user.ecoPoints || 150);
     setActiveTab("scanner");
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setActiveResult(null);
+    localStorage.removeItem("waste_auth_user");
   };
 
   const handleRemoveAuditEntry = (id: string) => {
@@ -113,9 +120,16 @@ export default function App() {
   };
 
   const handleClearAudit = () => {
-    if (window.confirm("Are you sure you want to clear your waste audit history?")) {
+    if (window.confirm("Are you sure you want to clear your private waste audit history?")) {
       setAuditEntries([]);
     }
+  };
+
+  const handleSelectTab = (tab: string) => {
+    if (tab === "scanner") {
+      setActiveResult(null);
+    }
+    setActiveTab(tab);
   };
 
   const isCurrentResultSaved = !!(
@@ -127,18 +141,29 @@ export default function App() {
     )
   );
 
+  // 1. FIRST SCREEN: If user is not authenticated, show ONLY the Login Gateway
+  if (!currentUser) {
+    return (
+      <LoginView
+        currentUser={null}
+        onLogin={handleLogin}
+      />
+    );
+  }
+
+  // 2. REMAINING PAGES: Render complete application only after login
   return (
     <div className="min-h-screen bg-[#F1F5F9] dark:bg-[#0B1120] text-[#1E293B] dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-[#2196F3] selection:text-white">
       {/* Navigation Header */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleSelectTab}
         selectedRegionId={selectedRegionId}
         setSelectedRegionId={setSelectedRegionId}
         auditCount={auditEntries.length}
         ecoPoints={ecoPoints}
         currentUser={currentUser}
-        onOpenLogin={() => setActiveTab("login")}
+        onOpenLogin={() => {}}
         onLogout={handleLogout}
       />
 
@@ -152,6 +177,7 @@ export default function App() {
                 onReset={() => setActiveResult(null)}
                 onSaveToAudit={handleSaveToAudit}
                 isSaved={isCurrentResultSaved}
+                onOverrideItem={handleOverrideResult}
               />
             ) : (
               <ScannerView
@@ -183,14 +209,6 @@ export default function App() {
 
         {activeTab === "report" && <ReportDumpView />}
 
-        {activeTab === "login" && (
-          <LoginView
-            currentUser={currentUser}
-            onLogin={handleLogin}
-            onClose={() => setActiveTab("scanner")}
-          />
-        )}
-
         {activeTab === "audit" && (
           <HistoryAuditView
             auditEntries={auditEntries}
@@ -211,27 +229,27 @@ export default function App() {
             </span>
             <span className="text-slate-400">•</span>
             <span className="font-medium text-slate-600 dark:text-slate-400">
-              Waste Intelligence & Categorization System (PS-14)
+              Private Citizen Session • {currentUser.citizenId || "ID-ENCRYPTED"}
             </span>
           </div>
 
           <div className="flex items-center space-x-3 text-xs font-semibold">
             <button
-              onClick={() => setActiveTab("checklists")}
+              onClick={() => handleSelectTab("checklists")}
               className="hover:text-[#2196F3] transition-colors"
             >
               Segregation Checklists
             </button>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <button
-              onClick={() => setActiveTab("schedule")}
+              onClick={() => handleSelectTab("schedule")}
               className="hover:text-[#2196F3] transition-colors"
             >
               Pickup Reminders
             </button>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <button
-              onClick={() => setActiveTab("rules")}
+              onClick={() => handleSelectTab("rules")}
               className="hover:text-[#2196F3] transition-colors"
             >
               Municipal Standard: {currentRegion.name.split("(")[0].trim()}

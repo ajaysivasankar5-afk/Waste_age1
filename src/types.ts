@@ -10,6 +10,8 @@ export interface UserProfile {
   ecoPoints: number;
   joinedDate: string;
   streakDays: number;
+  isPrivate?: boolean;
+  citizenId?: string;
 }
 
 export interface WasteComponentBreakdown {
@@ -86,6 +88,8 @@ export interface DumpingReport {
   status: "Pending Investigation" | "Dispatched Cleanup" | "Resolved";
   timestamp: number;
   reporterName?: string;
+  reporterId?: string;
+  isAnonymous?: boolean;
 }
 
 export interface ScheduleEvent {
@@ -100,18 +104,7 @@ export interface ScheduleEvent {
   frequency?: "Weekly" | "Bi-Weekly" | "Monthly";
 }
 
-export interface EducationalArticle {
-  id: string;
-  title: string;
-  category: "Myth Buster" | "Recycling Guide" | "Composting" | "Hazardous Safety" | "Zero Waste";
-  readTime: string;
-  summary: string;
-  content: string[];
-  keyTakeaway: string;
-  badge: string;
-}
-
-export interface ChecklistItem {
+export interface WasteChecklistItem {
   id: string;
   title: string;
   description: string;
@@ -125,7 +118,17 @@ export interface WasteChecklistCategory {
   title: string;
   subtitle: string;
   icon: string;
-  category: WasteCategory | "Household";
-  items: ChecklistItem[];
+  category: WasteCategory | "Household" | "General";
+  items: WasteChecklistItem[];
 }
 
+export interface EducationalArticle {
+  id: string;
+  title: string;
+  category: string;
+  readTime: string;
+  summary: string;
+  content: string[];
+  keyTakeaway: string;
+  badge: string;
+}
