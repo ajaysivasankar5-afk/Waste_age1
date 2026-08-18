@@ -1,0 +1,76 @@
+import { ScheduleEvent, DumpingReport } from "../types";
+
+export const DEFAULT_SCHEDULES: ScheduleEvent[] = [
+  {
+    id: "sched-1",
+    day: "Monday",
+    time: "07:00 AM",
+    binType: "Green Organics & Compost Bin",
+    category: "Organic",
+    color: "#16A34A",
+    active: true,
+  },
+  {
+    id: "sched-2",
+    day: "Wednesday",
+    time: "06:30 AM",
+    binType: "Blue Recycling Bin (Single Stream)",
+    category: "Recyclable",
+    color: "#2563EB",
+    active: true,
+  },
+  {
+    id: "sched-3",
+    day: "Friday",
+    time: "07:00 AM",
+    binType: "Black Landfill General Waste",
+    category: "Landfill",
+    color: "#64748B",
+    active: true,
+  },
+  {
+    id: "sched-4",
+    day: "Saturday",
+    time: "09:00 AM",
+    binType: "Monthly E-Waste & Hazardous Drop-Off",
+    category: "Hazardous",
+    color: "#DC2626",
+    active: false,
+  },
+];
+
+export const INITIAL_COMMUNITY_REPORTS: DumpingReport[] = [
+  {
+    id: "rep-101",
+    title: "Discarded car batteries & oil cans near stream",
+    location: "Oakridge Creek Trail, Sector 4",
+    category: "Hazardous Spill",
+    description: "Found 3 corroded lead-acid batteries and open lubricant jugs left near the stormwater culvert.",
+    severity: "Critical",
+    status: "Dispatched Cleanup",
+    timestamp: Date.now() - 1000 * 60 * 60 * 14,
+    reporterName: "Sarah M. (Park Ranger Volunteer)",
+  },
+  {
+    id: "rep-102",
+    title: "Overflowing commercial dumpster blocking sidewalk",
+    location: "Corner of 5th Ave & Market St",
+    category: "Overflowing Public Bin",
+    description: "Plastic packaging and food boxes spilling across the pedestrian walkway for 2 days.",
+    severity: "Medium",
+    status: "Pending Investigation",
+    timestamp: Date.now() - 1000 * 60 * 60 * 36,
+    reporterName: "David K.",
+  },
+  {
+    id: "rep-103",
+    title: "Piles of construction rubble and broken drywall",
+    location: "Vacant lot on Industrial Parkway",
+    category: "Illegal Dumping",
+    description: "Unlicensed truck dumped broken drywall, treated wood planks, and tile grout.",
+    severity: "High",
+    status: "Pending Investigation",
+    timestamp: Date.now() - 1000 * 60 * 60 * 50,
+    reporterName: "GreenWatch Community Member",
+  },
+];

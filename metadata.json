@@ -1,0 +1,6 @@
+{
+  "name": "Waste Segregation Assistant",
+  "description": "AI-powered waste classification and segregation assistant for households to sort recyclables, organic, hazardous, and landfill items with instant camera detection and regional rules.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
